@@ -404,8 +404,83 @@
     }
     footer span { color: var(--accent); }
 
+    /* ── MOBILE MENU ── */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px;
+      background: var(--navy); border-radius: 2px;
+      transition: transform .3s, opacity .3s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-menu {
+      display: none; position: fixed; top: 66px; left: 0; right: 0;
+      background: #fff; border-bottom: 2px solid var(--blue-light);
+      flex-direction: column; z-index: 299; padding: 1rem 2rem;
+      box-shadow: 0 8px 24px rgba(46,158,94,.12);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      padding: .75rem 0; font-size: 1rem; font-weight: 600;
+      color: var(--text-light); text-decoration: none;
+      border-bottom: 1px solid var(--blue-light);
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+
+    /* ── TYPED CURSOR ── */
+    .typed-cursor { animation: blink 0.8s step-end infinite; }
+
+    /* ── NAV ACTIVE ── */
+    nav a.nav-active { color: var(--blue); }
+    nav a.nav-active::after {
+      content: ''; display: block; width: 100%; height: 2px;
+      background: var(--accent); border-radius: 2px; margin-top: 2px;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── NAV SCROLLED ── */
+    nav.scrolled { box-shadow: 0 4px 28px rgba(46,158,94,.18); }
+
+    /* ── BACK TO TOP ── */
+    #backToTop {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 400;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--blue); color: #fff;
+      border: none; font-size: 1.3rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s, transform .2s;
+      box-shadow: 0 4px 16px rgba(46,158,94,.35);
+    }
+    #backToTop.visible { opacity: 1; pointer-events: all; }
+    #backToTop:hover { transform: translateY(-3px); }
+
+    /* ── CONTACT FORM ── */
+    .cf-group { display: flex; flex-direction: column; gap: .35rem; }
+    .cf-label { font-size: .82rem; font-weight: 700; color: var(--navy); }
+    .cf-input {
+      font-family: 'Sora', sans-serif; font-size: .92rem;
+      padding: .75rem 1rem; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--blue-pale);
+      color: var(--text); outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .cf-input:focus {
+      border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46,158,94,.12);
+    }
+    .cf-input.error { border-color: #e05a5a; }
+    .cf-error { font-size: .78rem; color: #e05a5a; font-weight: 600; min-height: 1rem; }
+
     @media(max-width:768px){
       nav ul { display: none; }
+      .hamburger { display: flex; }
       .cissp-header-card { grid-template-columns: 1fr; }
       .hero-stats { gap: 2rem; }
     }
@@ -432,8 +507,19 @@
     <li><a href="#team">Team</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <button class="nav-cta">Get a Consultation</button>
+  <button class="nav-cta" onclick="document.getElementById('contact-form-section').scrollIntoView({behavior:'smooth'})">Get a Consultation</button>
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#why" class="mobile-link">Why IAM</a>
+  <a href="#services" class="mobile-link">Services</a>
+  <a href="#vendors" class="mobile-link">Vendors</a>
+  <a href="#cissp" class="mobile-link">CISSP</a>
+  <a href="#team" class="mobile-link">Team</a>
+  <a href="#contact" class="mobile-link">Contact</a>
+</div>
 
 <!-- HERO -->
 <section id="hero">
@@ -443,7 +529,7 @@
     <div class="hero-badge">Identity & Access Management Specialists</div>
     <h1>
       Secure Every Identity.<br>
-      <span class="hl">Protect Every Access.</span>
+      <span class="hl typed-text" id="typed-target"></span><span class="hl typed-cursor" id="typed-cursor">|</span>
     </h1>
     <p>TrustAxis delivers enterprise-grade IAM solutions — from Zero Trust architecture to privileged access governance — safeguarding your organization's most critical assets.</p>
     <div class="hero-btns">
@@ -992,11 +1078,326 @@
   </div>
 </section>
 
+<!-- CONTACT FORM -->
+<section id="contact-form-section" style="background:#fff;padding:5rem 2rem;">
+  <p class="section-label">// Send a Message</p>
+  <h2 class="section-title">Request a Free Consultation</h2>
+  <div class="section-line"></div>
+  <form id="contactForm" novalidate style="max-width:580px;margin:0 auto;display:flex;flex-direction:column;gap:1.2rem;">
+    <div class="cf-group">
+      <label class="cf-label" for="cf-name">Full Name *</label>
+      <input class="cf-input" id="cf-name" type="text" placeholder="e.g. John Smith" autocomplete="name"/>
+      <span class="cf-error" id="err-name"></span>
+    </div>
+    <div class="cf-group">
+      <label class="cf-label" for="cf-email">Work Email *</label>
+      <input class="cf-input" id="cf-email" type="email" placeholder="you@company.com" autocomplete="email"/>
+      <span class="cf-error" id="err-email"></span>
+    </div>
+    <div class="cf-group">
+      <label class="cf-label" for="cf-company">Company / Organization</label>
+      <input class="cf-input" id="cf-company" type="text" placeholder="Your organization name"/>
+    </div>
+    <div class="cf-group">
+      <label class="cf-label" for="cf-service">Service of Interest *</label>
+      <select class="cf-input" id="cf-service">
+        <option value="">— Select a service —</option>
+        <option>Identity Governance & Administration (IGA)</option>
+        <option>Privileged Access Management (PAM)</option>
+        <option>Single Sign-On & MFA</option>
+        <option>Zero Trust Architecture</option>
+        <option>Customer IAM (CIAM)</option>
+        <option>IAM Maturity Assessment</option>
+        <option>General Inquiry</option>
+      </select>
+      <span class="cf-error" id="err-service"></span>
+    </div>
+    <div class="cf-group">
+      <label class="cf-label" for="cf-msg">Message *</label>
+      <textarea class="cf-input" id="cf-msg" rows="4" placeholder="Tell us about your IAM challenge or project…" style="resize:vertical;"></textarea>
+      <span class="cf-error" id="err-msg"></span>
+    </div>
+    <button type="submit" class="btn btn-primary" style="align-self:flex-start;padding:.9rem 2.4rem;font-size:1rem;" id="cf-submit">
+      Send Message →
+    </button>
+    <div id="cf-success" style="display:none;background:#d4f5e2;border:1px solid #5ec48a;border-radius:10px;padding:1.2rem 1.6rem;color:#1a6b40;font-weight:700;">
+      ✅ Thank you! We'll get back to you within one business day.
+    </div>
+  </form>
+</section>
+
 <!-- FOOTER -->
 <footer>
   &copy; 2026 <span>TrustAxis IAM</span> · Co-Founded by Salwa Mohammed & Yousuf Jowhar · Toronto, Canada · All Rights Reserved<br>
   <span style="color:#1a5a30;margin-top:.4rem;display:block;">CISSP® is a registered trademark of (ISC)² · All vendor names are trademarks of their respective owners</span>
 </footer>
 
+<!-- BACK TO TOP BUTTON -->
+<button id="backToTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ═══════════════════════════════════════════════
+// 1. TYPED TEXT EFFECT — hero headline cycles
+// ═══════════════════════════════════════════════
+(function() {
+  const phrases = [
+    'Protect Every Access.',
+    'Enforce Zero Trust.',
+    'Govern Every Identity.',
+    'Secure Every Privilege.',
+    'Enable Least Privilege.',
+  ];
+  const el = document.getElementById('typed-target');
+  if (!el) return;
+  let phraseIdx = 0, charIdx = 0, deleting = false;
+
+  function tick() {
+    const current = phrases[phraseIdx];
+    if (!deleting) {
+      el.textContent = current.slice(0, ++charIdx);
+      if (charIdx === current.length) {
+        deleting = true;
+        return setTimeout(tick, 2200);
+      }
+      setTimeout(tick, 68);
+    } else {
+      el.textContent = current.slice(0, --charIdx);
+      if (charIdx === 0) {
+        deleting = false;
+        phraseIdx = (phraseIdx + 1) % phrases.length;
+        return setTimeout(tick, 400);
+      }
+      setTimeout(tick, 38);
+    }
+  }
+  setTimeout(tick, 800);
+})();
+
+// ═══════════════════════════════════════════════
+// 2. ANIMATED COUNTERS — stat numbers count up
+// ═══════════════════════════════════════════════
+(function() {
+  const stats = [
+    { el: null, target: 83,  suffix: '%',   duration: 1800 },
+    { el: null, target: 500, suffix: '+',   duration: 2200 },
+    { el: null, target: 10,  suffix: '+',   duration: 1400 },
+  ];
+  // find the stat-num elements
+  const nums = document.querySelectorAll('.stat-num');
+  const storeTargets = [
+    { raw: '83%',   target: 83,  suffix: '%',  prefix: '' },
+    { raw: '500+',  target: 500, suffix: '+',  prefix: '' },
+    { raw: '10+',   target: 10,  suffix: '+',  prefix: '' },
+    { raw: '24/7',  target: null }  // don't animate, keep as-is
+  ];
+  nums.forEach((el, i) => {
+    const cfg = storeTargets[i];
+    if (!cfg || cfg.target === null) return;
+    el.dataset.target = cfg.target;
+    el.dataset.suffix = cfg.suffix;
+    el.textContent = '0' + cfg.suffix;
+  });
+
+  function animateCounter(el) {
+    const target = +el.dataset.target;
+    const suffix = el.dataset.suffix || '';
+    const duration = 1800;
+    const start = performance.now();
+    function frame(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      el.textContent = Math.round(ease * target) + suffix;
+      if (progress < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // trigger when hero stats enter viewport
+  const heroStats = document.querySelector('.hero-stats');
+  if (heroStats) {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          document.querySelectorAll('.stat-num[data-target]').forEach(animateCounter);
+          obs.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    obs.observe(heroStats);
+  }
+})();
+
+// ═══════════════════════════════════════════════
+// 3. SCROLL REVEAL — cards fade in on scroll
+// ═══════════════════════════════════════════════
+(function() {
+  // Add reveal class to all cards and section titles
+  const selectors = [
+    '.why-card', '.service-card', '.vendor-card',
+    '.domain-card', '.threat-card', '.fw-card',
+    '.team-card', '.section-intro', '.why-intro',
+    '.cissp-header-card', '.cf-group'
+  ];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach((el, i) => {
+      el.classList.add('reveal');
+      el.style.transitionDelay = (i % 4) * 0.08 + 's';
+    });
+  });
+
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+})();
+
+// ═══════════════════════════════════════════════
+// 4. STICKY NAV SHADOW on scroll
+// ═══════════════════════════════════════════════
+(function() {
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+})();
+
+// ═══════════════════════════════════════════════
+// 5. ACTIVE NAV HIGHLIGHT — highlights current section
+// ═══════════════════════════════════════════════
+(function() {
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav ul a[href^="#"]');
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(a => a.classList.remove('nav-active'));
+        const active = document.querySelector(`nav ul a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('nav-active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+})();
+
+// ═══════════════════════════════════════════════
+// 6. BACK TO TOP BUTTON visibility
+// ═══════════════════════════════════════════════
+(function() {
+  const btn = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 500);
+  }, { passive: true });
+})();
+
+// ═══════════════════════════════════════════════
+// 7. MOBILE HAMBURGER MENU
+// ═══════════════════════════════════════════════
+(function() {
+  const btn = document.getElementById('hamburger');
+  const menu = document.getElementById('mobileMenu');
+  if (!btn || !menu) return;
+
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('open');
+    menu.classList.toggle('open');
+  });
+
+  // close menu on link click
+  menu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      btn.classList.remove('open');
+      menu.classList.remove('open');
+    });
+  });
+})();
+
+// ═══════════════════════════════════════════════
+// 8. CONTACT FORM VALIDATION
+// ═══════════════════════════════════════════════
+(function() {
+  const form = document.getElementById('contactForm');
+  if (!form) return;
+
+  function validate() {
+    let ok = true;
+
+    const name = document.getElementById('cf-name');
+    const errName = document.getElementById('err-name');
+    if (!name.value.trim() || name.value.trim().length < 2) {
+      errName.textContent = 'Please enter your full name.';
+      name.classList.add('error');
+      ok = false;
+    } else {
+      errName.textContent = '';
+      name.classList.remove('error');
+    }
+
+    const email = document.getElementById('cf-email');
+    const errEmail = document.getElementById('err-email');
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+    if (!emailOk) {
+      errEmail.textContent = 'Please enter a valid work email address.';
+      email.classList.add('error');
+      ok = false;
+    } else {
+      errEmail.textContent = '';
+      email.classList.remove('error');
+    }
+
+    const service = document.getElementById('cf-service');
+    const errService = document.getElementById('err-service');
+    if (!service.value) {
+      errService.textContent = 'Please select a service.';
+      service.classList.add('error');
+      ok = false;
+    } else {
+      errService.textContent = '';
+      service.classList.remove('error');
+    }
+
+    const msg = document.getElementById('cf-msg');
+    const errMsg = document.getElementById('err-msg');
+    if (!msg.value.trim() || msg.value.trim().length < 10) {
+      errMsg.textContent = 'Please write a brief message (at least 10 characters).';
+      msg.classList.add('error');
+      ok = false;
+    } else {
+      errMsg.textContent = '';
+      msg.classList.remove('error');
+    }
+
+    return ok;
+  }
+
+  // Live validation on blur
+  ['cf-name','cf-email','cf-service','cf-msg'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('blur', validate);
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const btn = document.getElementById('cf-submit');
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+
+    // Simulate send (replace with actual fetch/API call)
+    setTimeout(() => {
+      form.style.display = 'none';
+      document.getElementById('cf-success').style.display = 'block';
+    }, 1200);
+  });
+})();
+</script>
 </body>
 </html>
